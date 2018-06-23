@@ -7,6 +7,8 @@ NAME=ddhcpd
 DAEMON=/usr/sbin/ddhcpd
 MAXDELAY=10
 
+
+
 validate_section_ddhcpd() {
   uci_validate_section "$NAME" ddhcpd settings \
   'dhcp_interface:string:br-client' \
@@ -16,6 +18,7 @@ validate_section_ddhcpd() {
   'timeout:uinteger:30' \
   'block_network:cidr4' \
   'dhcp_lease_time:uinteger:300'
+  server_interface=$(ubus call network.interface dump | jsonfilter -e "@.interface[@.interface='$(cat /lib/gluon/respondd/client.dev 2>/dev/null)' && @.up=true].device")
 }
 
 start_service() {
@@ -48,5 +51,5 @@ start_service() {
 
 service_triggers() {
   procd_add_config_trigger "config.change" "ddhcpd" /etc/init.d/ddhcpd restart
-  procd_add_interface_trigger "interface.*" "br-client" /etc/init.d/ddhcpd restart
+  procd_add_interface_trigger "interface.*" "$server_interface" /etc/init.d/ddhcpd restart
 }
